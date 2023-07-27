@@ -7,9 +7,9 @@
                  [org.clojure/java.jdbc "0.7.12"]
                  [org.clojure/data.json "2.4.0"]
                  [ring/ring-core "1.10.0"]
-                 [ring/ring-jetty-adapter "1.10.0"]]
+                 [ring/ring-jetty-adapter "1.10.0"]
+                 [com.h2database/h2 "2.2.220"]]
   :main ^:skip-aot cloj-restaurante.core
   :target-path "target/%s"
   :profiles {:uberjar {:aot :all
-                       :jvm-opts ["-Dclojure.compiler.direct-linking=true"]}}
-  :resource-paths ["resources/h2-2.1.214.jar"])
+                       :jvm-opts ["-Dclojure.compiler.direct-linking=true"]}})
