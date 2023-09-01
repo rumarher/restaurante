@@ -1,6 +1,7 @@
 (ns cloj-restaurante.datafood
+  (:gen-class)
   (:require [clojure.java.jdbc :as j]
-            [clojure.data.json :refer [json-str]]
+            [clojure.data.json :refer [write-str]]
             [clojure.set :refer [subset?]]))
 
 (def h2-db {:dbtype "h2"
@@ -11,8 +12,8 @@
             })
 
 (j/db-do-commands h2-db
-                  [;;(j/drop-table-ddl :ordeprs)
-                   ;;(j/drop-table-ddl :menu)
+                  [(j/drop-table-ddl :orders)
+                   (j/drop-table-ddl :menu)
                    (j/create-table-ddl :menu
                                        [[:id :bigint :auto_increment :primary :key]
                                         [:name "varchar(32)" "not null"]
@@ -30,21 +31,23 @@
                   {:name "lomo" :price 90}
                   {:name "bienmesabe" :price 80}])
 
-(def order-to-json (comp json-str frequencies))
-
+(defn order-to-json [order]
+  (write-str (frequencies order)))
 
 (defn save-order
   ([multiple-food]
+   (println multiple-food)
    (let [json-order (order-to-json multiple-food)]
-     (j/insert! h2-db :orders {:the_order json-order
-                               :date (java.time.LocalDateTime/now)})))
+     (println (str "2: " json-order))
+     (j/insert! h2-db "orders" {:the_order json-order
+                                :date (java.time.LocalDateTime/now)})))
   ([food number]
-   (let [json-order (json-str (hash-map food number))]
-     (j/insert! h2-db :orders {:the_order json-order
-                               :date (java.time.LocalDateTime/now)}))))
+   (let [json-order (write-str (hash-map food number))]
+     (j/insert! h2-db "orders" {:the_order json-order
+                                :date (java.time.LocalDateTime/now)}))))
 
 (def food (atom (let [menu-food (j/query h2-db ["select name from menu"])]
-            (map #(get % :name) menu-food))))
+                  (map #(get % :name) menu-food))))
 
 
 (defn is-order-correct? [order]
@@ -56,5 +59,4 @@
         price (str "\t| " (get food-map :price) "\n")]
     (str name price)))
 
-(def food-with-prices (let [menu-food (j/query h2-db ["select name,price from menu"])]
-                        (map #(pretty-string-menu %) menu-food)))
+(def food-with-prices (atom (j/query h2-db ["select name,price from menu"])))

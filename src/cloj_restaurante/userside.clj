@@ -1,9 +1,13 @@
 (ns cloj-restaurante.userside
+  (:gen-class)
   (:require [clojure.string :refer [split]]
-            [datafood :refer [is-order-correct? food save-order]]
-            [clojure.main :as main]))
+            [cloj-restaurante.datafood :refer [food is-order-correct?]]
+            [clojure.main :as main]
+            [clojure.core.async :refer [chan buffer]]))
 
-(defn- generate-random-order
+(def incoming-orders (chan))
+
+(defn generate-random-order
   ([] (take (+ (rand-int 4) 1) (repeatedly #(rand-nth @food))))
   ([size] (take size (repeatedly #(rand-nth @food)))))
 
