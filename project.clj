@@ -9,13 +9,16 @@
                  [org.clojure/core.async "1.6.673"]
                  [org.clojure/data.json "2.4.0"]
                  [org.apache.kafka/kafka-clients "3.5.1"]
+                 [ring/ring-json "0.5.1"]
                  [compojure "1.7.0"]
                  [ring/ring-defaults "0.3.4"]
                  [com.h2database/h2 "2.2.220"]
                  [com.fzakaria/slf4j-timbre "0.4.0"]
                  [ring/ring-jetty-adapter "1.10.0"]]
   :plugins [[lein-ring "0.12.6"]]
-  :ring {:handler cloj-restaurante.core/handler-app}
+  :ring {:handler cloj-restaurante.core/handler-app
+         :init cloj-restaurante.core/save-order-async
+         :destroy cloj-restaurante.core/to-exit}
   :main ^:skip-aot cloj-restaurante.core
   :target-path "target/%s"
   :profiles {:uberjar {:aot :all
