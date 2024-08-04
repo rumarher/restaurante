@@ -11,16 +11,17 @@
             :port "8082"})
 
 (j/db-do-commands h2-db
-                  [;(j/drop-table-ddl :orders {:conditional? true})
+                  [(j/drop-table-ddl :orders {:conditional? true})
+                   (j/drop-table-ddl :menu {:conditional? true})
                    (j/create-table-ddl :menu
                                        [[:id :bigint :auto_increment :primary :key]
                                         [:name "varchar(32)" "not null"]
                                         [:price :int "not null"]] {:conditional? true})
                    (j/create-table-ddl :orders
-                                       [[:id :bigint :auto_increment :primary :key]
+                                       [[:id :bigint :auto_increment :primary :key] ;; probablemente en el futuro sea sustituido por random_token
                                         [:the_order :json "not null"]
                                         [:status "varchar(32)" "not null"]
-                                        [:date :date "not null"]
+                                        [:date_received :date "not null"]
                                         [:deadline :date]
                                         [:random_token "varchar(36)" "not null"]] {:conditional? true})])
 
@@ -31,26 +32,22 @@
                   {:name "lomo" :price 90}
                   {:name "bienmesabe" :price 80}])
 
-(defn order-to-json [order]
-  (write-str (frequencies order)))
-
-(def n-order (atom 0))
-
-(defn inc-order [n-order]
-  (swap! n-order + 1))
-
 (defn save-order
-  ([multiple-food]
-   (println multiple-food)
-   (let [json-order (write-str multiple-food)
+  "Guarda una orden en la base de datos y devuelve su uuid"
+  ([new-order]
+   (println "save order" new-order)
+   (let [json-order (write-str new-order)
          uuid-order (.toString (java.util.UUID/randomUUID))]
      (j/insert! h2-db "orders" {:the_order json-order
-                                :date (java.time.LocalDateTime/now)
+                                :date_received (java.time.LocalDateTime/now)
                                 :status "pending"
                                 :random_token uuid-order})
      uuid-order)))
 
-(defn get-status-order
+(defn jsondb-to-str [jsondb]
+  (clojure.string/join (map #(when (not= 92 %) (char %)) jsondb)))
+
+(defn get-order-status
   [uuid-order]
   (j/query h2-db ["select status from orders where ? = random_token" uuid-order]))
    
@@ -68,4 +65,29 @@
 
 (def food-with-prices (atom (j/query h2-db ["select name,price from menu"])))
 
+(defn get-all-orders []
+  (map #(assoc % :the_order (jsondb-to-str (:the_order % ))) (j/query h2-db ["select * from orders"])))
 
+(defn get-order
+  [order-token]
+  (j/query h2-db ["select * from orders where ? = random_token " order-token]))
+
+(defn order-to-cook
+  [uuid-order]
+  (j/update! h2-db :orders {:status "cooking"} ["random_token = ?" uuid-order]))
+
+(defn order-to-deliver
+  [uuid-order]
+  (j/update! h2-db :orders {:status "in delivery"} ["random_token = ?" uuid-order]))
+
+(defn order-to-refuse
+  [uuid-order]
+  (j/update! h2-db :orders {:status "refused"} ["random_token = ?" uuid-order]))
+
+(defn order-to-pending
+  [uuid-order]
+  (j/update! h2-db :orders {:status "pending"} ["random_token = ?" uuid-order]))
+
+(defn order-to-be-done
+  [uuid-order]
+  (j/update! h2-db :orders {:status "done"} ["random_token = ?" uuid-order]))
