@@ -13,17 +13,19 @@
 (j/db-do-commands h2-db
                   [(j/drop-table-ddl :orders {:conditional? true})
                    (j/drop-table-ddl :menu {:conditional? true})
+		   
                    (j/create-table-ddl :menu
                                        [[:id :bigint :auto_increment :primary :key]
                                         [:name "varchar(32)" "not null"]
                                         [:price :int "not null"]] {:conditional? true})
                    (j/create-table-ddl :orders
-                                       [[:id :bigint :auto_increment :primary :key] ;; probablemente en el futuro sea sustituido por random_token
+                                       [[:id :bigint :auto_increment]
                                         [:the_order :json "not null"]
                                         [:status "varchar(32)" "not null"]
                                         [:date_received :date "not null"]
+                                        [:short_token "varchar(4)" "not null"]
                                         [:deadline :date]
-                                        [:random_token "varchar(36)" "not null"]] {:conditional? true})])
+                                        [:random_token :uuid :primary :key "not null"]] {:conditional? true})])
 
 (j/insert-multi! h2-db :menu
                  [{:name "arroz" :price 50}
@@ -32,17 +34,40 @@
                   {:name "lomo" :price 90}
                   {:name "bienmesabe" :price 80}])
 
+
+(defn encode-human-readable-base32
+  [value]
+  (let [acum-string ""
+        chars-b32 "ABCDEFGHIJKLMNOPQRSTUVWXYZ234567"]
+    (loop [x value
+           u acum-string]
+      (let [q (quot x 32)
+            r (mod  x 32)]
+        (if (> x 32)
+          (recur q (str u (nth chars-b32 r)))
+          (apply str (reverse (str u (nth chars-b32 r)))))))))
+
+(defn get-current-id
+  [uuid-value]
+  (get (j/get-by-id h2-db "orders" uuid-value :random_token) :id))
+
 (defn save-order
   "Guarda una orden en la base de datos y devuelve su uuid"
   ([new-order]
    (println "save order" new-order)
    (let [json-order (write-str new-order)
-         uuid-order (.toString (java.util.UUID/randomUUID))]
+         uuid-order (java.util.UUID/randomUUID)]
      (j/insert! h2-db "orders" {:the_order json-order
                                 :date_received (java.time.LocalDateTime/now)
                                 :status "pending"
-                                :random_token uuid-order})
-     uuid-order)))
+                                :random_token uuid-order
+                                :short_token "0000"})
+     (let [id  (get-current-id uuid-order)
+	   short_token (encode-human-readable-base32 id)]
+       (println id "------------")
+       (j/update! h2-db :orders {:short_token short_token } ["random_token = ?" uuid-order])
+       short_token))))
+
 
 (defn jsondb-to-str [jsondb]
   (clojure.string/join (map #(when (not= 92 %) (char %)) jsondb)))
@@ -50,7 +75,7 @@
 (defn get-order-status
   [uuid-order]
   (j/query h2-db ["select status from orders where ? = random_token" uuid-order]))
-   
+
 (def food (atom (let [menu-food (j/query h2-db ["select name from menu"])]
                   (map #(get % :name) menu-food))))
 

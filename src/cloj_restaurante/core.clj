@@ -13,7 +13,9 @@
                                       start-deliver
                                       to-refuse
                                       put-in-pending
-                                      finalize-order]]
+                                      finalize-order
+				      repl-options]]
+   [clojure.main :refer [repl]]
    [clojure.data.json :refer [write-str]]
    [ring.middleware.defaults :refer [wrap-defaults
                                      site-defaults ]]
@@ -81,14 +83,35 @@
 
 (def handler-app
   (wrap-json-body
-   (wrap-defaults
-    app-routes 
-    (assoc-in site-defaults [:security :anti-forgery] false))))
+   (wrap-cors
+    (wrap-defaults
+     app-routes 
+     (assoc-in site-defaults [:security :anti-forgery] false))
+    :access-control-allow-methods [:get :put :post :delete]
+    ;; aquí va la dirección de donde se esté ejecutando el front-end
+    :access-control-allow-origin [#"http://localhost:3001"])))
 
-(defn -main
-  "I don't do a whole lot ... yet."
-  [& args]
+
+;; (apply clojure.main/repl repl-options)
+
+(defn -interactive-init
+  []
+  (apply clojure.main/repl repl-options))
+
+(defn -server-init
+  []
   (println "######Comienza el servidor en main########")
   (save-order-callb)
   (println "######Escuchamos peticiones en main########")
   (jetty/run-jetty handler-app {:port 3000 :join? true}))
+
+
+(defn -main
+  "I don't do a whole lot ... yet."
+  [& args]
+  (case (first args)
+    "-server" (-server-init)
+    "-interactive" (-interactive-init)
+    (println "NO me has dicho nada... -server o -interactive")))
+
+

@@ -40,6 +40,8 @@
   ([] (take (+ (rand-int 4) 1) (repeatedly #(rand-nth @food))))
   ([size] (take size (repeatedly #(rand-nth @food)))))
 
+
+
 (def repl-options
   [:prompt #(printf "Introduzca la orden :> ")
    :read   (fn [request-prompt request-exit]
@@ -47,13 +49,15 @@
                  (split (read-line) #" ")))
    :eval   (fn [[& the-order]]
              (let [parsed-order
-                   (if (or
-                        (= 1 (count the-order))
-                        (and (= 2 (count the-order))
-                             (re-matches #"\d+" (nth the-order 1))))
+                   (if
+		     (or
+                      (= 1 (count the-order))
+                      (and (= 2 (count the-order))
+                           (re-matches #"\d+" (nth the-order 1))))
                      (and
                       (is-order-correct? (list (nth the-order 0)))
                       (repeat (Integer. (nth the-order 1 0)) (nth the-order 0)))
+		     
                      (and
                       (is-order-correct? the-order)
                       the-order))]

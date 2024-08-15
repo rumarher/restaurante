@@ -10,11 +10,14 @@
                  [org.clojure/data.json "2.4.0"]
                  [org.apache.kafka/kafka-clients "3.5.1"]
                  [ring/ring-json "0.5.1"]
+                 [ring-cors/ring-cors "0.1.13"]
                  [compojure "1.7.0"]
                  [ring/ring-defaults "0.3.4"]
                  [com.h2database/h2 "2.2.220"]
                  [com.fzakaria/slf4j-timbre "0.4.0"]
-                 [ring/ring-jetty-adapter "1.10.0"]]
+                 [ring/ring-jetty-adapter "1.10.0"]
+                 ;; https://mvnrepository.com/artifact/clj-ulid/clj-ulid
+                 [clj-ulid/clj-ulid "1.0.0"]]
   :plugins [[lein-ring "0.12.6"]]
   :ring {:handler cloj-restaurante.core/handler-app
          :init cloj-restaurante.core/save-order-async
