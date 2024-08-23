@@ -1,6 +1,6 @@
 (ns cloj-restaurante.userside
   (:gen-class)
-  (:require [clojure.string :refer [split]]
+  (:require [clojure.string  :as str]
             [cloj-restaurante.datafood :refer [food
                                                is-order-correct?
                                                get-order
@@ -8,7 +8,8 @@
                                                order-to-deliver
                                                order-to-refuse
                                                order-to-pending
-                                               order-to-be-done]]
+                                               order-to-be-done
+                                               save-order]]
             [clojure.main :as main]
             [clojure.core.async :refer [chan buffer]]))
 
@@ -40,27 +41,44 @@
   ([] (take (+ (rand-int 4) 1) (repeatedly #(rand-nth @food))))
   ([size] (take size (repeatedly #(rand-nth @food)))))
 
+(defn set-new-order
+  [pred]
+  (let [order-seq (re-seq #"\b(\w+)\s*(\d*)?\b" pred)]
+    (save-order
+     (apply merge (map (fn [x]
+                         (if (clojure.string/blank? (nth x 2))
+                           {(second x) 1}
+                           {(second x) (nth x 2)}))
+                       order-seq)))))
 
+(defn get-instruction
+  [data]
+  (second (re-find #"\s*(order|check):" data)))
+
+
+(defn get-predicate
+  [data]
+  (str/replace data #"^\s*(order|check):"  ""))
+
+(defn check-order
+  [data])
+
+(defn parse-predicate
+  [data]
+  (re-seq #"\w+\s*\d*" data))
 
 (def repl-options
   [:prompt #(printf "Introduzca la orden :> ")
    :read   (fn [request-prompt request-exit]
-             (or ({:line-start request-prompt :stream-end request-exit} (main/skip-whitespace *in*))
-                 (split (read-line) #" ")))
-   :eval   (fn [[& the-order]]
-             (let [parsed-order
-                   (if
-		     (or
-                      (= 1 (count the-order))
-                      (and (= 2 (count the-order))
-                           (re-matches #"\d+" (nth the-order 1))))
-                     (and
-                      (is-order-correct? (list (nth the-order 0)))
-                      (repeat (Integer. (nth the-order 1 0)) (nth the-order 0)))
-		     
-                     (and
-                      (is-order-correct? the-order)
-                      the-order))]
-               (when-not parsed-order
-                 (throw (Exception. (str "la order: " the-order ", es incorrecta."))))
-               (println "Buena orden:" the-order " -> " parsed-order)))])
+             (or ({:line-start request-prompt :stream-end request-exit}
+                  (main/skip-whitespace *in*))
+                 (read-line)))
+   :eval   (fn [the-order]
+             (println "la orden -->"  (str the-order))
+             (let [the-instruction (get-instruction the-order)
+                   pred (get-predicate the-order)]
+               (println the-instruction)
+               (case the-instruction
+                 "order" (set-new-order pred)
+                 "check" (check-order pred)
+                 (throw (Exception. (str the-instruction ": no es una orden correcta"))))))])

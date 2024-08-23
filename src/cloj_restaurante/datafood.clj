@@ -52,8 +52,9 @@
   (get (j/get-by-id h2-db "orders" uuid-value :random_token) :id))
 
 (defn save-order
-  "Guarda una orden en la base de datos y devuelve su uuid"
-  ([new-order]
+  "Recibe una orden array-map {\"arroz\" 4 \"lomo\" 4 ...}la guarda en
+  la base de datos y devuelve su uuid"
+  [new-order]
    (println "save order" new-order)
    (let [json-order (write-str new-order)
          uuid-order (java.util.UUID/randomUUID)]
@@ -66,7 +67,7 @@
 	   short_token (encode-human-readable-base32 id)]
        (println id "------------")
        (j/update! h2-db :orders {:short_token short_token } ["random_token = ?" uuid-order])
-       short_token))))
+       short_token)))
 
 
 (defn jsondb-to-str [jsondb]

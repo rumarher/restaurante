@@ -1,3 +1,7 @@
 * Ideas
 1. [ ] Crear clientes que hagan órdenes aleatorias y se guarden
 2. [ ] Crear servicios http, para permitir que se puedan hacer pedidos
+* Qué hacer
+1. [ ] Crear interfaz que en el repl permita hacer un pedido
+   1. ~order rice~
+2. [ ] Crear interfaz que en el repl permita ver todas las comandas
