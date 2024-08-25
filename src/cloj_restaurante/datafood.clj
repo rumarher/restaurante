@@ -2,7 +2,8 @@
   (:gen-class)
   (:require [clojure.java.jdbc :as j]
             [clojure.data.json :refer [write-str]]
-            [clojure.set :refer [subset?]]))
+            [clojure.set :refer [subset?]]
+            [clojure.string :as str]))
 
 (def h2-db {:dbtype "h2"
             :user "sa"
@@ -71,7 +72,7 @@
 
 
 (defn jsondb-to-str [jsondb]
-  (clojure.string/join (map #(when (not= 92 %) (char %)) jsondb)))
+  (str/join (map #(when (not= 92 %) (char %)) jsondb)))
 
 (defn get-order-status
   [uuid-order]

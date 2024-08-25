@@ -9,13 +9,17 @@
                                                order-to-refuse
                                                order-to-pending
                                                order-to-be-done
-                                               save-order]]
+                                               save-order
+                                               get-all-orders
+                                               get-order-status]]
             [clojure.main :as main]
             [clojure.core.async :refer [chan buffer]]))
 
 (def incoming-orders (chan))
 
 (def cooking-orders (chan))
+
+(def patt-orders #"^\s*(order\s*:|check\s*:|check\s*all)")
 
 (defn start-cooking-order
   [the-order]
@@ -53,15 +57,27 @@
 
 (defn get-instruction
   [data]
-  (second (re-find #"\s*(order|check):" data)))
-
+  (-> (second (re-find patt-orders data))
+      (clojure.string/replace #":" "")
+      (clojure.string/replace #"\s+" " ")))
 
 (defn get-predicate
   [data]
-  (str/replace data #"^\s*(order|check):"  ""))
+  (str/replace data patt-orders  ""))
 
 (defn check-order
-  [data])
+  [data]
+  (println (get-order data)))
+
+(defn check-order-status
+  [data]
+  (let [the-order (get-order-status data)]
+    (println the-order)))
+
+(defn check-all-orders
+  []
+  (let [all-orders (get-all-orders)]
+    (println all-orders)))
 
 (defn parse-predicate
   [data]
@@ -81,4 +97,5 @@
                (case the-instruction
                  "order" (set-new-order pred)
                  "check" (check-order pred)
+                 "check all" (check-all-orders)
                  (throw (Exception. (str the-instruction ": no es una orden correcta"))))))])

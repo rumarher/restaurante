@@ -91,23 +91,6 @@
        (wrap-defaults
 	(assoc-in site-defaults [:security :anti-forgery] false))))
 
-
-#_
-;; Antigua Configuración
-(def handler-app
-  (wrap-json-body
-   (wrap-cors
-    (wrap-defaults
-     app-routes 
-     (assoc-in site-defaults [:security :anti-forgery] false))
-    :access-control-allow-methods [:get :put :post :delete :options]
-    ;; aquí va la dirección de donde se esté ejecutando el front-end
-    :access-control-allow-origin [#"http://localhost:3001"]
-    :access-control-allow-headers ["Content-Type" "Authorization"])))
-
-
-;; (apply clojure.main/repl repl-options)
-
 (defn -interactive-init
   []
   (apply clojure.main/repl repl-options))
