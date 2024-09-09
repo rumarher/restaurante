@@ -90,7 +90,7 @@
         price (str "\t| " (get food-map :price) "\n")]
     (str name price)))
 
-(def food-with-prices (atom (j/query h2-db ["select name,price from menu"])))
+(def food-with-prices (atom (j/query h2-db ["select id, name, price from menu"])))
 
 (defn get-all-orders []
   (map #(assoc % :the_order (jsondb-to-str (:the_order % ))) (j/query h2-db ["select * from orders"])))
