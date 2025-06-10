@@ -1,0 +1,6 @@
+(def food-status
+  #{:cooking
+    :pending
+    :refused
+    :delivering
+    :done})

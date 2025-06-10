@@ -1,0 +1,17 @@
+* Para hacer un pedido
+#+begin_src text
+  curl -X POST localhost:3000/to-order --data '{"arroz":2}' -H "Content-Type: application/json"
+#+end_src
+* Para ver el estado del pedido
+#+begin_src text
+  curl -X GET localhost:3000/order-status --data '{"uuid-order" : "0eed5f52-e7b4-46d8-a4fe-6048d2831be9"}' -H "Content-Type: application/json"
+#+end_src
+* Para cambiar el estado del pedido
+#+begin_src text
+  curl -X PATCH localhost:3000/change-order-status --data '{"uuid-order" : "0eed5f52-e7b4-46d8-a4fe-6048d2831be9", "next-status": ",,,"}' -H "Content-Type: application/json"
+#+end_src
+
+
+KJ31
+ZZDA
+123F
